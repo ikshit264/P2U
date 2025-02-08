@@ -5,7 +5,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
 import subprocess
 
-GEMINI_API_KEY = 'AIzaSyA2BrQoZLmMAyMqyOmDeS2BHmSFkGZXYDE'  # Key dal bhadve
+GEMINI_API_KEY = ''  # Key dal bhadve
 
 prompt = ChatPromptTemplate.from_messages(
 
