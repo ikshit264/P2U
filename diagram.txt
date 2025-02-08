@@ -1,0 +1,167 @@
+@startuml
+' Styling options for better readability
+skinparam class {
+  BackgroundColor White
+  BorderColor Black
+  ArrowColor Black
+}
+
+skinparam package {
+  BackgroundColor lightblue
+  BorderColor Black
+}
+
+' Package definitions for logical grouping
+package "Database" {
+
+  ' Table: Customers
+  class Customers {
+    +customer_id : INT (PK, Auto-increment)
+    +first_name : VARCHAR(255)
+    +last_name : VARCHAR(255)
+    +date_of_birth : DATE
+    +gender : ENUM('Male', 'Female', 'Other')
+    +email : VARCHAR(255) (UNIQUE)
+    +phone_number : VARCHAR(20)
+    +address : VARCHAR(255)
+    +registration_date : TIMESTAMP
+  }
+
+  ' Table: Accounts
+  class Accounts {
+    +account_number : VARCHAR(20) (PK)
+    +customer_id : INT (FK)
+    +account_type : ENUM('Savings', 'Checking', 'Credit')
+    +balance : DECIMAL(15,2)
+    +opening_date : TIMESTAMP
+    +interest_rate : DECIMAL(5,2)
+    +status : ENUM('Active', 'Inactive', 'Closed')
+  }
+
+  ' Table: Transactions
+  class Transactions {
+    +transaction_id : INT (PK, Auto-increment)
+    +account_number : VARCHAR(20) (FK)
+    +transaction_type : ENUM('Deposit', 'Withdrawal', 'Transfer', 'Payment')
+    +amount : DECIMAL(15,2)
+    +transaction_date : TIMESTAMP
+    +description : VARCHAR(255)
+    +source_account : VARCHAR(20)
+    +target_account : VARCHAR(20)
+  }
+
+  ' Table: Loans
+  class Loans {
+    +loan_id : INT (PK, Auto-increment)
+    +account_number : VARCHAR(20) (FK)
+    +loan_amount : DECIMAL(15,2)
+    +interest_rate : DECIMAL(5,2)
+    +loan_term : INT (Months)
+    +start_date : DATE
+    +end_date : DATE
+    +loan_type : VARCHAR(50)
+    +status : ENUM('Active', 'Completed', 'Defaulted')
+  }
+
+  ' Table: Employees
+  class Employees {
+    +employee_id : INT (PK, Auto-increment)
+    +first_name : VARCHAR(255)
+    +last_name : VARCHAR(255)
+    +job_title : VARCHAR(255)
+    +department : VARCHAR(255)
+    +hire_date : DATE
+    +salary : DECIMAL(10,2)
+    +email : VARCHAR(255) (UNIQUE)
+    +phone_number : VARCHAR(20)
+    +username : VARCHAR(50) (UNIQUE)
+    +password : VARCHAR(255)
+  }
+
+  ' Table: AuditLog
+  class AuditLog {
+    +log_id : INT (PK, Auto-increment)
+    +table_name : VARCHAR(255)
+    +record_id : INT
+    +column_name : VARCHAR(255)
+    +old_value : TEXT
+    +new_value : TEXT
+    +timestamp : TIMESTAMP
+    +employee_id : INT (FK)
+    +action : ENUM('INSERT', 'UPDATE', 'DELETE')
+  }
+
+  ' Table: Branches
+  class Branches {
+    +branch_id : INT (PK, Auto-increment)
+    +branch_name : VARCHAR(255)
+    +address : VARCHAR(255)
+    +phone_number : VARCHAR(20)
+    +email : VARCHAR(255)
+  }
+
+  ' Table: EmployeeBranchAssignments
+  class EmployeeBranchAssignments {
+      +employee_id : INT (FK)
+      +branch_id : INT (FK)
+      +assignment_date : DATE
+      +PRIMARY KEY (employee_id, branch_id)
+  }
+
+  ' Relationships between tables
+  Customers "1" -- "1..*" Accounts : "owns"
+  Accounts "1" -- "0..*" Transactions : "involved in"
+  Accounts "1" -- "0..*" Loans : "related to"
+  Employees "1" -- "0..*" AuditLog : "performed"
+  Employees "1..*" -- "0..*" EmployeeBranchAssignments : Works at
+  Branches "1..*" -- "0..*" EmployeeBranchAssignments : Employs
+  Accounts "1" -- "1" Customers : Belongs to
+
+}
+
+package "Backend" {
+    class API {
+        +handleRequest(request: Request): Response
+    }
+
+    class BusinessLogic {
+        +createAccount(customer: Customer, accountType: String): Account
+        +deposit(accountNumber: String, amount: Double): void
+        +withdraw(accountNumber: String, amount: Double): void
+        +transfer(fromAccount: String, toAccount: String, amount: Double): void
+        +getAccountDetails(accountNumber: String): Account
+        +getTransactionHistory(accountNumber: String, startDate: Date, endDate: Date): List<Transaction>
+        +createLoan(accountNumber: String, amount: Double, interestRate: Double, term: Integer): Loan
+        +payLoanInstallment(loanId: Integer, amount: Double): void
+        +getLoanDetails(loanId: Integer): Loan
+    }
+
+    class DataAccessLayer {
+        +getCustomer(customerId: Integer): Customer
+        +getAccount(accountNumber: String): Account
+        +saveAccount(account: Account): void
+        +saveTransaction(transaction: Transaction): void
+        +getTransactions(accountNumber: String, startDate: Date, endDate: Date): List<Transaction>
+        +saveLoan(loan: Loan): void
+        +getLoan(loanId: Integer): Loan
+        +updateLoan(loan: Loan): void
+        +getEmployee(employeeId: Integer): Employee
+        +logAudit(auditLog: AuditLog): void
+    }
+
+    class DatabaseConnection {
+        +connect(): Connection
+        +disconnect(): void
+        +executeQuery(query: String): ResultSet
+    }
+
+    API -- BusinessLogic : uses
+    BusinessLogic -- DataAccessLayer : uses
+    DataAccessLayer -- DatabaseConnection : uses
+    DataAccessLayer -- Database : interacts with
+}
+
+' Connections between packages
+Backend -- Database : "accesses"
+
+@enduml
